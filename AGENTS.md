@@ -4,9 +4,9 @@
 
 This repository supports the research project **"Research and Development of an AI Pipeline for Automated Reproduction of 1-Day Vulnerabilities."**
 
-This file defines the rules for AI coding and research assistants working in the repository. These assistants are not the same as the runtime vulnerability-reproduction agents planned for Phase 2.
+This file defines the rules for AI coding and research assistants working in the repository. These assistants are not the same as any runtime vulnerability-reproduction agents that may be added to the system.
 
-The current specialized-project scope is **Phase 1: Reproduction and Verification Infrastructure**. Unless the user explicitly requests Phase 2 work, prioritize Phase 1 and do not introduce complex agent reasoning, LangGraph orchestration, a Supervisor Agent, or autonomous PoC generation into the baseline pipeline.
+The current implementation priority is **reproduction and verification infrastructure**. Unless the user explicitly requests advanced-agent work, prioritize this infrastructure and do not introduce complex agent reasoning, LangGraph orchestration, a Supervisor Agent, or autonomous PoC generation into the baseline pipeline.
 
 ---
 
@@ -65,11 +65,11 @@ Do not silently change research scope, success criteria, benchmark policy, or sa
 
 ---
 
-## 3. Phase Boundaries
+## 3. Scope Boundaries
 
-### Phase 1 — Current Priority
+### Reproduction Infrastructure — Current Priority
 
-Phase 1 builds a deterministic execution substrate for reproduction and verification before complex AI reasoning is introduced.
+The current implementation track builds a deterministic execution substrate for reproduction and verification before complex AI reasoning is introduced.
 
 Its required layers are:
 
@@ -98,11 +98,11 @@ Its required layers are:
    - Execute the same candidate artifact against the vulnerable build, patched build, and negative controls.
    - Produce a structured verdict with evidence and provenance.
 
-Phase 1 also includes a manually verified benchmark, a non-agentic baseline pipeline, RQ1.1/RQ1.2 experiments, failure analysis, reporting, and an end-to-end demonstration.
+This scope also includes a manually verified benchmark, a non-agentic baseline pipeline, RQ1.1/RQ1.2 experiments, failure analysis, reporting, and an end-to-end demonstration.
 
-### Phase 2 — Deferred Unless Explicitly Requested
+### Advanced-Agent Architecture — Deferred Unless Explicitly Requested
 
-Phase 2 adds AI reasoning above the Phase 1 substrate. Planned roles include:
+Advanced-agent work adds AI reasoning above the reproduction and verification substrate. Planned roles include:
 
 - Vulnerability Analyst.
 - Reproduction Planner.
@@ -120,7 +120,7 @@ The planned loop is:
 Observe -> Analyze -> Plan -> Execute -> Verify -> Refine
 ```
 
-Phase 2 may use LangGraph or another orchestration framework, but Phase 1 interfaces must remain usable without it.
+Advanced-agent work may use LangGraph or another orchestration framework, but the core infrastructure interfaces must remain usable without it.
 
 Do not couple core schemas, environment builders, runners, or verification logic to a particular LLM provider or agent framework.
 
@@ -398,7 +398,7 @@ Keep benchmark curation separate from evaluation. Human ground-truth work is all
 
 ## 12. Baseline and Experiment Integrity
 
-The Phase 1 baseline must work without complex agent reasoning.
+The baseline must work without complex agent reasoning.
 
 Do not quietly add model-generated hints, manual trigger edits, patch-derived answers, or hidden environment repair to a baseline run. Record intervention level explicitly.
 
@@ -422,7 +422,7 @@ Track at least:
 - Resource cost.
 - Degree of automation and human intervention.
 
-For later Phase 2 comparisons, also track model/tool cost, iterations, replanning behavior, and trajectory provenance.
+For later advanced-agent comparisons, also track model/tool cost, iterations, replanning behavior, and trajectory provenance.
 
 ---
 
@@ -453,9 +453,9 @@ The verification oracle must remain callable independently from any AI agent.
 
 ---
 
-## 14. Phase 2 Architectural Guidance
+## 14. Advanced-Agent Architectural Guidance
 
-When Phase 2 is explicitly in scope, use the Phase 1 substrate rather than duplicating build, execution, or verification inside prompts or agent code.
+When advanced-agent work is explicitly in scope, use the existing reproduction substrate rather than duplicating build, execution, or verification inside prompts or agent code.
 
 The user should interact with a configurable Supervisor as the default entry point. The Supervisor may interpret a request, decompose it into bounded tasks, assign specialist roles, manage dependencies, evaluate results, and produce the final response.
 
@@ -477,7 +477,7 @@ Prefer configuration-driven registration of agents, models, tools, skills, capab
 
 Shared state should contain coordination data and artifact references, not unlimited logs, binaries, or unrestricted LLM scratchpads.
 
-Every Phase 2 decision must preserve the evidence/provenance contract established in Phase 1.
+Every advanced-agent decision must preserve the evidence and provenance contract established by the core infrastructure.
 
 ---
 
@@ -501,7 +501,7 @@ If a requested action would cross these boundaries, stop and ask for a safer pro
 
 - Inspect existing code, tests, schemas, and conventions before editing.
 - Make the smallest coherent change that satisfies the request.
-- Do not introduce Phase 2 abstractions into Phase 1 merely because they may be useful later.
+- Do not introduce advanced-agent abstractions into the core infrastructure merely because they may be useful later.
 - Do not hard-code a single CVE's paths or expected output in generic pipeline code.
 - Prefer typed structured records over free-form dictionaries where the project language supports them.
 - Validate external metadata and never trust downloaded content as executable configuration without checks.
@@ -572,7 +572,7 @@ Do not hide failed cases or report only successful examples. Aggregate results m
 
 ## 19. Completion Criteria
 
-A Phase 1 feature is complete when:
+A core infrastructure feature is complete when:
 
 - Its input and output contracts are defined.
 - Success and failure states are explicit.
@@ -606,8 +606,8 @@ Unless the user explicitly changes the research scope, do not optimize the proje
 - Training a new foundation model.
 - Replacing empirical evidence with LLM judgment.
 - Maximizing raw crash count.
-- Supporting every operating system, architecture, or vulnerability class in Phase 1.
-- Building the full Phase 2 multi-agent framework before the Phase 1 substrate is usable and evaluated.
+- Supporting every operating system, architecture, or vulnerability class in the initial implementation scope.
+- Building the full multi-agent framework before the reproduction substrate is usable and evaluated.
 
 ---
 
