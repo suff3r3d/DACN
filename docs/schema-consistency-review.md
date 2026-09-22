@@ -16,12 +16,14 @@ This review covers `docs/schema-plan.md` and
 - provenance and failure classification;
 - benchmark and experiment separation.
 
-No JSON Schema implementation was reviewed because it does not yet exist.
+This review covers the comprehensive future-facing design. The active
+implementation is the reduced MVP under `schemas/0.1.0/`; its structural and
+reference integrity is checked by the offline tests under `tests/schema/`.
 
 ## 2. Result
 
-The documentation now contains matching plans and field designs for all 20
-planned schemas:
+The comprehensive documentation contains matching plans and field designs for
+the following 20 possible schemas:
 
 1. `common`
 2. `artifact-record`
@@ -44,9 +46,10 @@ planned schemas:
 19. `experiment-result`
 20. `case-report`
 
-The schema plan and field-design inventory agree. Each independently persisted
-schema has a canonical `urn:dacn:schema:<name>:1.0.0` identity in the field
-design.
+The schema plan and field-design inventory agree. The MVP intentionally
+implements only the eight persisted records selected in
+`docs/schema-mvp-proposal.md`, using `0.1.0` schema identities. The other
+records remain deferred design material.
 
 ## 3. Findings and Resolutions
 
@@ -186,6 +189,18 @@ published as one consistency unit, and released packages require all references
 to resolve. Transient running state is operational state, not final research
 evidence.
 
+### 3.16 Aggregate validation indexes could reference themselves
+
+**Finding:** Verification results, case manifests, pipeline runs, and experiment
+results contained validation-result indexes whose descriptions could include
+validation of the containing record. Such validation necessarily occurs after
+the immutable subject exists and would create a forward self-reference.
+
+**Resolution:** These indexes now contain only validation results consumed as
+inputs. Validation of the containing record remains external. A later
+superseding manifest may index validation of an earlier manifest, but an
+immutable record cannot reference its own future validation result.
+
 ## 4. Canonical Identity Rules
 
 The review establishes these distinctions:
@@ -218,9 +233,9 @@ source/artifact evidence
   -> benchmark and experiment aggregation
 ```
 
-Validation results point to already created subjects. Checked build and
-execution records do not point forward to later validation results. Later
-aggregate records may index validation results they consumed.
+Validation results point to already created subjects. Checked records do not
+point forward to later validation results. Later aggregate records may index
+validation results they consumed as inputs, but never validation of themselves.
 
 Two intentional bidirectional relationships remain:
 
@@ -238,8 +253,8 @@ not contain dangling references.
   a vulnerability was reproduced.
 - Artifact registration records byte identity. Later validation proves the
   stored bytes still agree.
-- Package `replayable` means the package can be rerun in isolation. It does not
-  mean `VERIFIED`.
+- Package `replayable` means the package can be rerun in its declared Docker
+  container. It does not mean `VERIFIED`.
 - Only `verification-result.verdict` determines reproduction outcome.
 - Benchmark ground truth is human-reviewed reference data, not an automated
   pipeline result.

@@ -32,6 +32,14 @@ def envelope(schema, identifier, *inputs):
     }
 
 
+def verification_check(summary, evidence_id="artifact-sanitizer"):
+    return {
+        "passed": True,
+        "summary": summary,
+        "evidence": [artifact_ref(evidence_id)],
+    }
+
+
 VALID = {
     "source-record": {
         **envelope("source-record", "source-advisory"),
@@ -56,18 +64,38 @@ VALID = {
         "summary": "A safe synthetic fixture used to validate the schema.",
         "sources": ["source-advisory"],
         "revision_status": "resolved",
+        "claims": [{
+            "field": "/revisions/vulnerable",
+            "raw_value": "affected before the fixing commit",
+            "normalized_value": "a" * 40,
+            "source_id": "source-advisory",
+            "classification": "confirmed_fact",
+            "confidence": "high",
+            "evidence": [artifact_ref("artifact-advisory")],
+            "method": "Resolved the advisory repository reference to an immutable commit.",
+        }],
         "repository": {"url": "https://example.invalid/project.git"},
         "revisions": {"vulnerable": "a" * 40, "patched": "b" * 40},
         "patch": {
             "commits": ["b" * 40],
             "changed_files": ["src/parser.c"],
             "changed_functions": ["parse_record"],
+            "evidence": [artifact_ref("artifact-patch")],
+            "static_context": {
+                "code_locations": [{"file": "src/parser.c", "function": "parse_record", "line": 42}],
+                "call_context": [{"caller": "process_input", "callee": "parse_record"}],
+                "reachability": {
+                    "status": "confirmed",
+                    "summary": "The sanitizer trace reaches parse_record.",
+                    "evidence": [artifact_ref("artifact-sanitizer")],
+                },
+            },
         },
     },
     "environment-spec": {
         **envelope("environment-spec", "environment-paired"),
         "platform": {"os": "linux", "arch": "x86_64"},
-        "isolation": {"type": "container", "image_digest": IMAGE},
+        "isolation": {"type": "docker", "image_digest": IMAGE},
         "toolchain": {"compiler": "clang 18", "build_system": "cmake 3.30"},
         "dependencies": {"policy": "locked"},
         "build": {
@@ -76,7 +104,14 @@ VALID = {
             "expected_outputs": ["build/fixture"],
         },
         "network": {"acquisition": True, "build": False, "execution": False},
-        "limits": {"timeout_seconds": 60, "memory_mb": 512},
+        "limits": {
+            "timeout_seconds": 60,
+            "memory_mb": 512,
+            "processes": 32,
+            "disk_mb": 1024,
+            "output_bytes": 1048576,
+        },
+        "instrumentation": [{"kind": "asan", "availability": "required"}],
     },
     "build-record": {
         **envelope("build-record", "build-vulnerable", "environment-paired"),
@@ -94,6 +129,14 @@ VALID = {
             "stderr": artifact_ref("artifact-build-stderr"),
         }],
         "outputs": [artifact_ref("artifact-vulnerable-binary")],
+        "observed_toolchain": {"compiler": "clang 18.1.8", "build_system": "cmake 3.30.2"},
+        "dependency_resolution": {
+            "status": "resolved",
+            "manager": "system",
+            "manager_version": "fixture-1",
+            "inventory": artifact_ref("artifact-dependency-inventory"),
+            "checksums_verified": True,
+        },
     },
     "execution-record": {
         **envelope("execution-record", "execution-vulnerable", "build-vulnerable"),
@@ -106,7 +149,13 @@ VALID = {
         "command": ["build/fixture", "artifacts/trigger.bin"],
         "working_directory": "runtime",
         "environment": {},
-        "limits": {"timeout_seconds": 10, "memory_mb": 256},
+        "limits": {
+            "timeout_seconds": 10,
+            "memory_mb": 256,
+            "processes": 8,
+            "disk_mb": 128,
+            "output_bytes": 65536,
+        },
         "status": "completed",
         "started_at": "2026-09-17T00:03:00Z",
         "completed_at": "2026-09-17T00:03:01Z",
@@ -130,12 +179,15 @@ VALID = {
             "patched": "execution-patched",
             "negative_controls": ["execution-control"],
         },
-        "checks": [{
-            "id": "target-signal-vulnerable-only",
-            "passed": True,
-            "summary": "The target signal appears only in the vulnerable run.",
-            "evidence": [artifact_ref("artifact-sanitizer")],
-        }],
+        "checks": {
+            "environment_and_build_identity": verification_check("Environment and build identity valid"),
+            "same_candidate": verification_check("Same candidate used"),
+            "vulnerable_target_signal": verification_check("Vulnerable target signal present"),
+            "reachability": verification_check("Relevant code reached"),
+            "patched_behavior": verification_check("Patched behavior safe"),
+            "negative_controls": verification_check("Negative controls passed"),
+            "patch_consistency": verification_check("Observation consistent with patch"),
+        },
         "verdict": "VERIFIED",
         "rationale": "Paired execution and the negative control satisfy the expected checks.",
         "evidence": [artifact_ref("artifact-sanitizer")],

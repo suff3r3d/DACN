@@ -110,11 +110,12 @@
     },
     "limits": {
       "type": "object",
-      "required": ["timeout_seconds", "memory_mb"],
+      "required": ["timeout_seconds", "memory_mb", "processes", "disk_mb", "output_bytes"],
       "properties": {
         "timeout_seconds": { "type": "integer", "minimum": 1 },
         "memory_mb": { "type": "integer", "minimum": 1 },
         "processes": { "type": "integer", "minimum": 1 },
+        "disk_mb": { "type": "integer", "minimum": 1 },
         "output_bytes": { "type": "integer", "minimum": 0 }
       },
       "additionalProperties": false

@@ -13,6 +13,10 @@ paired environment, builds, executions, verification, and the replayable case
 manifest. The rationale and deferred capabilities are documented in
 `docs/schema-mvp-proposal.md`.
 
+The environment contract supports Docker only. Every environment specification
+must use `isolation.type: docker` and a digest-pinned image; host execution,
+other container engines, sandboxes, and virtual machines are invalid.
+
 Validation is intentionally offline. Consumers should register all files by
 their `$id` before validating a document; the test suite demonstrates this
 with `referencing.Registry`.

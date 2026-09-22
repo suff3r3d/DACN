@@ -1,5 +1,10 @@
 # Phase 1 Schema Plan
 
+> **Status:** This document records the comprehensive schema plan. The active
+> implementation is the eight-record `0.1.0` MVP defined in
+> `docs/schema-mvp-proposal.md`. Additional records are introduced only when an
+> exercised pipeline requirement justifies them.
+
 ## 1. Purpose
 
 This document defines the schema family needed for Phase 1 of the project:
@@ -351,7 +356,7 @@ Required concepts:
 - generated output files and state changes;
 - truncation indicators;
 - execution status and failure classification;
-- tool and host/container provenance.
+- Docker engine, image, and relevant host provenance.
 
 A timeout, signal, or non-zero exit must remain an observation rather than an
 automatic vulnerability finding.

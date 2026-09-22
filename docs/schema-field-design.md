@@ -1,5 +1,10 @@
 # Foundation Schema Field Design
 
+> **Status:** This is the comprehensive future-facing design retained for
+> reference. The active pre-runtime contract is the smaller `0.1.0` MVP in
+> `docs/schema-mvp-proposal.md` and `schemas/0.1.0/`. Deferred schemas in this
+> document are not current implementation requirements.
+
 ## 1. Scope
 
 This document designs the complete Phase 1 schema family field-by-field. It
@@ -100,6 +105,12 @@ The same lexical form is used for stable entity IDs such as `case_id`. A
 used in a record reference. A stable entity ID groups successive records and
 does not itself imply that a document with that ID exists. Field descriptions
 must state when an ID is an entity identity rather than a record reference.
+
+#### `$defs/stable_entity_id`
+
+Uses the same lexical constraints as `record_id`, but represents a stable
+entity identity rather than a resolvable immutable document. The distinction
+is semantic and must be explicit in the consuming field description.
 
 #### `$defs/local_id`
 
@@ -243,6 +254,12 @@ The identifier must use the `artifact` record kind. Semantic validation must
 resolve the record and verify that both the referenced metadata and stored
 bytes agree with `sha256`.
 
+#### `$defs/record_or_artifact_reference`
+
+Accepts exactly one `record_reference` or `artifact_reference`. It is used only
+where a stage input or output may legitimately be either kind; domain fields
+should prefer the narrower reference whenever possible.
+
 ### 3.5 Actor and tool identity
 
 #### `$defs/tool_identity`
@@ -305,6 +322,10 @@ Allowed `activity_type` values for v1:
 
 When `activity_type` is `other`, a separate `activity_type_detail` field is
 required. `completed_at` must not precede `started_at`.
+
+The implementation exposes the activity enum as `$defs/activity_type` and
+command argument arrays as `$defs/command` so later schemas reuse identical
+constraints.
 
 ### 3.7 Evidence-backed claims
 
@@ -462,6 +483,9 @@ Allowed stage names are `collect`, `normalize`, `resolve`, `build`, `extract`,
 A `semantics_changing` repair must be surfaced to later comparability and
 verification checks and cannot silently participate in a direct comparison.
 
+The repair enum is also exposed independently as
+`$defs/repair_classification`.
+
 ### 3.9 Availability and uncertainty
 
 #### `$defs/availability_status`
@@ -483,6 +507,16 @@ Allowed values:
 | `impact` | enum | Required | `low`, `medium`, `high`, or `blocking`. |
 | `related_fields` | array of JSON Pointers | Optional | Fields affected by the uncertainty. |
 | `evidence` | array of evidence references | Optional | Supporting or conflicting evidence. |
+
+### 3.10 Controlled extensions
+
+#### `$defs/extensions`
+
+Defines the explicit extension container described in the schema conventions.
+Property names use a reverse-domain namespace such as
+`org.example.adapter_metadata`; values may be any valid JSON. Consuming schemas
+decide whether to expose this object. Core evidence requirements cannot be
+satisfied only through extensions, and secrets remain prohibited.
 
 ## 4. `artifact-record.schema.json`
 
@@ -536,7 +570,7 @@ Allowed `artifact_kind` values for v1:
 - `build_log`;
 - `binary`;
 - `library`;
-- `container_metadata`;
+- `docker_metadata`;
 - `trigger`;
 - `negative_control`;
 - `harness`;
@@ -601,7 +635,7 @@ redacted or normalized derivative is created.
 |---|---|---|---|
 | `risk_class` | enum | Required | `benign`, `controlled_reproduction`, or `risk_increasing`. |
 | `executable` | boolean | Required | Whether the artifact is directly executable or loadable as code. |
-| `execution_scope` | enum | Required | `none`, `project_sandbox_only`, or `project_vm_only`. |
+| `execution_scope` | enum | Required | `none` or `project_docker_only`. |
 | `network_egress_allowed` | boolean | Required | Must normally be false for build and trigger execution artifacts. |
 | `contains_secrets` | boolean | Required | Must always be false for valid persisted project artifacts. |
 | `publication_status` | enum | Required | `internal`, `review_required`, or `approved`. |
@@ -624,7 +658,7 @@ artifacts.
 7. `contains_secrets: true` is structurally invalid.
 8. Executable artifacts cannot use `execution_scope: none` unless the record
    explains that execution is prohibited; v1 should prefer
-   `project_sandbox_only` or `project_vm_only`.
+   `project_docker_only`.
 9. `network_egress_allowed: true` requires a handling note and is not permitted
    for trigger execution without a separately reviewed policy.
 10. `supersedes_artifact_id` must not equal the current `record_id`.
@@ -1739,8 +1773,8 @@ urn:dacn:schema:environment-spec:1.0.0
 | `architecture_detail` | non-empty string | Conditional | Required for `other`. |
 | `libc` | non-empty string | Optional | C library and version requirement. |
 | `kernel_requirement` | non-empty string | Optional | Kernel constraint where material. |
-| `isolation` | enum | Required | `container` or `virtual_machine`. |
-| `base_image` | image identity | Conditional | Required for container isolation. |
+| `isolation` | enum | Required | Constant `docker`. |
+| `base_image` | image identity | Required | Digest-pinned Docker image identity. |
 
 An image identity contains registry, repository, optional human-readable tag,
 and mandatory immutable digest. A tag alone is insufficient.
@@ -1797,7 +1831,9 @@ execution network access requires explicit review.
 
 ### 13.6 Conditional and semantic rules
 
-1. Container environments require a digest-pinned base image.
+1. Docker is the only permitted build and execution environment, and every
+   environment requires a digest-pinned base image. Host execution, other
+   container engines, sandboxes, and virtual machines are not valid fallbacks.
 2. Required toolchain components must specify an exact version or a documented
    resolution strategy.
 3. Secrets and host credentials are prohibited from environment variables.
@@ -2215,7 +2251,7 @@ urn:dacn:schema:verification-result:1.0.0
 | `hypotheses` | array of evidence-backed statements | Required | May be empty. |
 | `unknowns` | array of evidence-backed statements | Required | May be empty. |
 | `uncertainties` | array of uncertainty items | Optional | Remaining uncertainty. |
-| `validation_result_ids` | array of record IDs | Required | Validation of all material input evidence. |
+| `validation_result_ids` | array of record IDs | Required | Validation of material inputs consumed by the oracle; excludes validation of this result itself. |
 | `provenance` | provenance event | Required | Oracle inputs and method. |
 | `extensions` | object | Optional | Controlled oracle extensions. |
 
@@ -2309,7 +2345,7 @@ urn:dacn:schema:case-manifest:1.0.0
 | `current_verification_result_id` | record ID | Conditional | Required when a final case status reflects a verdict. |
 | `attempt_ids` | array of record IDs | Required | All retained attempts. |
 | `pipeline_run_ids` | array of record IDs | Required | All pipeline runs for the package. |
-| `validation_result_ids` | array of record IDs | Required | Package and record validation results. |
+| `validation_result_ids` | array of record IDs | Required | Validation results consumed while assembling this manifest; excludes validation of this manifest itself. |
 | `replay` | replay descriptor | Conditional | Required when status is replayable or any final-verdict state. |
 | `compatibility` | compatibility object | Required | Required reader/schema versions and migrations. |
 | `supersedes_case_manifest_id` | record ID | Optional | Prior manifest version. |
@@ -2341,13 +2377,16 @@ unknown extensions must be preserved.
 3. `verified`, `not_reproduced`, `inconclusive`, and `invalid_environment`
    statuses agree with the current verification result verdict.
 4. `verified` requires a replay descriptor and a `VERIFIED` result.
-5. `replayable` means the package can execute in isolation; it does not imply
-   successful reproduction.
+5. `replayable` means the package can execute in its declared Docker container;
+   it does not imply successful reproduction.
 6. Package updates keep `case_id`, create a new manifest `record_id`, and link
    through supersession; evidence records are not silently replaced.
 7. No host-specific absolute path, secret, or dangling reference is allowed.
 8. Package validation includes artifact hashes and cross-record invariants, not
    only JSON Schema validity.
+9. Validation of this manifest or complete package is represented by a later
+   validation-result record. It may be indexed by a superseding manifest but
+   cannot be a forward reference in the manifest it validates.
 
 ## 20. `attempt-record.schema.json`
 
@@ -2461,7 +2500,7 @@ urn:dacn:schema:pipeline-run:1.0.0
 | `budget` | run-budget object | Required | Time, retries, compute, storage, and optional monetary budget. |
 | `resource_usage` | resource-usage object | Required | Actual aggregate use. |
 | `intervention_summary` | intervention-summary object | Required | Counts and highest intervention level. |
-| `validation_result_ids` | array of record IDs | Required | Run-level validation outcomes. |
+| `validation_result_ids` | array of record IDs | Required | Validation outcomes consumed during the run; excludes validation of this run record itself. |
 | `failure` | failure record | Conditional | Required for failed terminal status. |
 | `termination_reason` | non-empty string | Conditional | Required for interrupted or cancelled runs. |
 | `provenance` | provenance event | Required | Orchestration method and inputs. |
@@ -2497,6 +2536,8 @@ are supplied as declared validated inputs.
 9. A pipeline-run ID may be allocated before attempts begin. Released packages
    contain a terminal run record whose attempt references all resolve;
    transient running state is not accepted as final research evidence.
+10. Validation of the terminal pipeline-run record is external to that record
+    and must not appear as a forward self-validation reference.
 
 ## 22. `benchmark-case.schema.json`
 
@@ -2691,7 +2732,7 @@ urn:dacn:schema:experiment-result:1.0.0
 | `missing_data` | array of missing-data objects | Required | May be empty but explicit. |
 | `limitations` | array of non-empty strings | Required | May be empty but explicit. |
 | `analysis_artifacts` | array of artifact references | Required | Tables, scripts, and derived analysis outputs. |
-| `validation_result_ids` | array of record IDs | Required | Validation of aggregation inputs and outputs. |
+| `validation_result_ids` | array of record IDs | Required | Validation of aggregation inputs consumed by this result; excludes validation of this result itself. |
 | `provenance` | provenance event | Required | Analysis method and inputs. |
 | `supersedes_result_id` | record ID | Optional | Corrected prior result. |
 | `extensions` | object | Optional | Controlled analysis extensions. |
@@ -2724,6 +2765,8 @@ primary denominator.
 7. Condition comparisons use the declared unit of analysis and comparable
    budgets.
 8. Analysis artifacts and scripts are hashed and replayable.
+9. Validation of the experiment-result record is external and cannot be
+   referenced by the same immutable result.
 
 ## 25. `case-report.schema.json`
 
@@ -2785,7 +2828,7 @@ overridden inside the statement.
 
 The `replay summary` contains replay entry-point artifact, environment-spec IDs,
 argument array, expected duration range, expected artifact outputs, and a
-warning that the replay must run only in the project-controlled isolation
+warning that the replay must run only in the project-controlled Docker
 environment.
 
 ### 25.4 Conditional and semantic rules
@@ -2809,10 +2852,10 @@ family:
 1. `common`
 2. `artifact-record`
 3. `source-record`
-4. `vulnerability-record`
-5. `revision-resolution`
-6. `patch-context`
-7. `validation-result`
+4. `validation-result`
+5. `vulnerability-record`
+6. `revision-resolution`
+7. `patch-context`
 8. `environment-spec`
 9. `build-record`
 10. `execution-spec`

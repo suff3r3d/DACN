@@ -1,5 +1,6 @@
 import json
 import unittest
+from copy import deepcopy
 from pathlib import Path
 
 from jsonschema import Draft202012Validator, FormatChecker
@@ -87,6 +88,60 @@ class SchemaTests(unittest.TestCase):
         for name, instance in invalid.items():
             with self.subTest(schema=name):
                 self.assertFalse(self.validator(name).is_valid(instance))
+
+    def test_five_audited_gaps_are_enforced(self):
+        cases = []
+
+        value = deepcopy(VALID["vulnerability-record"])
+        del value["claims"]
+        cases.append(("vulnerability-record", "material claims", value))
+
+        value = deepcopy(VALID["vulnerability-record"])
+        value["patch"]["static_context"]["reachability"]["evidence"] = []
+        cases.append(("vulnerability-record", "reachability evidence", value))
+
+        value = deepcopy(VALID["environment-spec"])
+        del value["limits"]["disk_mb"]
+        cases.append(("environment-spec", "complete resource limits", value))
+
+        value = deepcopy(VALID["environment-spec"])
+        value["instrumentation"][0]["availability"] = "maybe"
+        cases.append(("environment-spec", "instrumentation availability", value))
+
+        value = deepcopy(VALID["build-record"])
+        del value["observed_toolchain"]
+        cases.append(("build-record", "observed toolchain", value))
+
+        value = deepcopy(VALID["build-record"])
+        value["dependency_resolution"]["status"] = "partial"
+        cases.append(("build-record", "resolved dependencies", value))
+
+        value = deepcopy(VALID["build-record"])
+        del value["dependency_resolution"]["inventory"]
+        cases.append(("build-record", "dependency inventory", value))
+
+        value = deepcopy(VALID["verification-result"])
+        value["checks"]["negative_controls"]["passed"] = False
+        cases.append(("verification-result", "all VERIFIED checks pass", value))
+
+        value = deepcopy(VALID["verification-result"])
+        value["checks"]["negative_controls"]["id"] = "redundant-id"
+        cases.append(("verification-result", "check key is the identifier", value))
+
+        for schema, requirement, instance in cases:
+            with self.subTest(schema=schema, requirement=requirement):
+                self.assertFalse(self.validator(schema).is_valid(instance))
+
+    def test_environment_requires_digest_pinned_docker(self):
+        for isolation_type in ("container", "virtual_machine", "sandbox", "podman"):
+            value = deepcopy(VALID["environment-spec"])
+            value["isolation"]["type"] = isolation_type
+            with self.subTest(isolation_type=isolation_type):
+                self.assertFalse(self.validator("environment-spec").is_valid(value))
+
+        value = deepcopy(VALID["environment-spec"])
+        del value["isolation"]["image_digest"]
+        self.assertFalse(self.validator("environment-spec").is_valid(value))
 
 
 if __name__ == "__main__":

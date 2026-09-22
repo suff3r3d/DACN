@@ -329,8 +329,13 @@ Avoid embedding host-specific absolute paths in reusable packages. Use case-rela
 
 ## 9. Environment Reconstruction Rules
 
+- Docker containers are the only permitted build and execution environment.
+  Do not run project builds, targets, triggers, or generated artifacts directly
+  on the host or in another container engine, sandbox, or virtual machine. If
+  the Docker daemon is unavailable, stop and report the environment as
+  unavailable rather than substituting another runtime.
 - Prefer immutable source revisions over moving branches or tags.
-- Pin container base images by digest when practical.
+- Pin every Docker base image by immutable digest. A tag alone is insufficient.
 - Pin dependencies or record the exact resolution result.
 - Record compiler, linker, runtime, package-manager, and build-system versions.
 - Keep dependency acquisition separate from reproduction execution.
@@ -485,7 +490,7 @@ Every advanced-agent decision must preserve the evidence and provenance contract
 
 - Work only with publicly disclosed 1-day vulnerabilities that have a usable patch, fixing commit, or fixed version.
 - Do not treat zero-days as benchmark candidates.
-- Execute generated artifacts only in project-controlled containers, virtual machines, or sandboxes.
+- Execute generated artifacts only in project-controlled Docker containers.
 - Do not scan, probe, exploit, or deploy against public/live systems or third-party infrastructure.
 - Do not add persistence, lateral movement, credential theft, destructive payloads, stealth, or post-exploitation behavior.
 - Do not optimize for mitigation bypass or weaponized exploitation.
@@ -591,7 +596,7 @@ A benchmark reproduction is complete only when:
 - The vulnerable build provides the expected target evidence.
 - The patched counterfactual and negative controls behave as required.
 - The oracle emits a justified structured verdict.
-- The entire case can be replayed in isolation.
+- The entire case can be replayed in its declared Docker container.
 
 ---
 

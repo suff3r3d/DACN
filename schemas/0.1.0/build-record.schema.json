@@ -11,8 +11,14 @@
         "required": ["status"]
       },
       "then": {
-        "required": ["outputs"],
-        "properties": { "outputs": { "minItems": 1 } }
+        "required": ["outputs", "observed_toolchain", "dependency_resolution"],
+        "properties": {
+          "outputs": { "minItems": 1 },
+          "observed_toolchain": { "minProperties": 1 },
+          "dependency_resolution": {
+            "properties": { "status": { "const": "resolved" } }
+          }
+        }
       },
       "else": { "required": ["failure"] }
     }
@@ -48,6 +54,18 @@
     "observed_toolchain": {
       "type": "object",
       "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "dependency_resolution": {
+      "type": "object",
+      "required": ["status", "manager", "manager_version", "inventory", "checksums_verified"],
+      "properties": {
+        "status": { "enum": ["resolved", "partial", "failed"] },
+        "manager": { "type": "string", "minLength": 1 },
+        "manager_version": { "type": "string", "minLength": 1 },
+        "inventory": { "$ref": "urn:dacn:schema:common:0.1.0#/$defs/artifact_ref" },
+        "checksums_verified": { "type": "boolean" }
+      },
+      "additionalProperties": false
     },
     "dependency_inventory": { "$ref": "urn:dacn:schema:common:0.1.0#/$defs/artifact_ref" },
     "repairs": {
