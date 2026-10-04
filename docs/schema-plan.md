@@ -1,7 +1,8 @@
 # Phase 1 Schema Plan
 
 > **Status:** This document records the comprehensive schema plan. The active
-> implementation is the eight-record `0.1.0` MVP defined in
+> implementation is the eight-record MVP, now versioned `0.2.0`; `0.1.0` remains
+> available for legacy validation. See `docs/schema-compatibility.md` and
 > `docs/schema-mvp-proposal.md`. Additional records are introduced only when an
 > exercised pipeline requirement justifies them.
 

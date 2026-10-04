@@ -1,5 +1,10 @@
 # Phase 1 Minimal Schema Proposal
 
+> Historical adoption rationale for `0.1.0`. The same eight-record scope now
+> uses `0.2.0` for new producers; see [compatibility changes](schema-compatibility.md)
+> and the [current usage guide](schema-usage-guide.md). Field lists below describe
+> the original proposal, not the current authoritative JSON Schemas.
+
 ## 1. Decision
 
 Use eight persisted record schemas plus one small shared-definition library for

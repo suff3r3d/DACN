@@ -17,7 +17,8 @@ This review covers `docs/schema-plan.md` and
 - benchmark and experiment separation.
 
 This review covers the comprehensive future-facing design. The active
-implementation is the reduced MVP under `schemas/0.1.0/`; its structural and
+implementation is the reduced MVP under `schemas/0.2.0/`, with `0.1.0` retained
+for legacy validation (see `docs/schema-compatibility.md`); its structural and
 reference integrity is checked by the offline tests under `tests/schema/`.
 
 ## 2. Result
@@ -48,7 +49,7 @@ the following 20 possible schemas:
 
 The schema plan and field-design inventory agree. The MVP intentionally
 implements only the eight persisted records selected in
-`docs/schema-mvp-proposal.md`, using `0.1.0` schema identities. The other
+`docs/schema-mvp-proposal.md`, now using `0.2.0` schema identities. The other
 records remain deferred design material.
 
 ## 3. Findings and Resolutions

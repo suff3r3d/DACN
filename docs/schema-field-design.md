@@ -1,8 +1,8 @@
 # Foundation Schema Field Design
 
 > **Status:** This is the comprehensive future-facing design retained for
-> reference. The active pre-runtime contract is the smaller `0.1.0` MVP in
-> `docs/schema-mvp-proposal.md` and `schemas/0.1.0/`. Deferred schemas in this
+> reference. The active pre-runtime contract is the smaller MVP, now `0.2.0`,
+> in `schemas/0.2.0/`; see `docs/schema-compatibility.md`. Deferred schemas in this
 > document are not current implementation requirements.
 
 ## 1. Scope

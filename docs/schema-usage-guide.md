@@ -3,8 +3,12 @@
 ## 1. Purpose
 
 This guide explains how pipeline components and future runtime agents should
-use the `schemas/0.1.0/` records. The JSON Schemas define valid document shape;
+use the `schemas/0.2.0/` records. The JSON Schemas define valid document shape;
 this guide defines the intended workflow and meaning.
+
+Legacy `0.1.0` records remain valid against their original schemas. See
+[schema compatibility](schema-compatibility.md) for version selection and
+review requirements; never reinterpret a legacy false check automatically.
 
 The active family contains eight persisted records:
 
@@ -79,7 +83,7 @@ Every persisted record begins with:
 
 ```yaml
 schema: execution-record
-schema_version: 0.1.0
+schema_version: 0.2.0
 id: execution-vulnerable-001
 case_id: case-001
 provenance:
@@ -322,8 +326,9 @@ classes. Record output truncation explicitly.
 
 ## 9. Verification
 
-The verification component reads exact execution IDs and produces one
-`verification-result`. It must evaluate all seven checks:
+The verification component reads available evidence and exact IDs of executions
+that actually occurred, and produces one `verification-result`. It must account
+for all seven checks:
 
 | Check key | Required question |
 |---|---|
@@ -335,15 +340,31 @@ The verification component reads exact execution IDs and produces one
 | `negative_controls` | Did every required negative control avoid the target signal? |
 | `patch_consistency` | Is the observed difference consistent with patch and root-cause evidence? |
 
-The enclosing key identifies each check. Each check value contains a boolean
-result, concise summary, and raw evidence artifact references. A narrative
-assertion without evidence is insufficient.
+The enclosing key identifies each check. Each value contains `status`,
+`summary`, and `evidence`. Status is `passed`, `failed`, or `not_evaluated`.
+Passed and failed checks require nonempty evidence and cannot have a skip
+`reason`. A not-evaluated check requires a nonempty `reason` describing the
+missing prerequisite; its evidence array may be empty if no observation exists.
+Missing or truncated telemetry is not evidence that a signal was absent.
 
-Verdict selection:
+The overall evidence list must be nonempty, including for early failures.
+Omit `executions` if none occurred; otherwise include only actual execution
+references. Empty role maps and empty control lists are invalid: omit absent
+roles. `VERIFIED` still requires vulnerable, patched, and negative-control IDs.
+
+Every result requires `oracle.name`, `oracle.version`, `oracle.adapter.name`,
+`oracle.adapter.version`, `oracle.adapter.implementation`, and
+`oracle.case_definition`. The last two fields are artifact references with IDs
+and SHA-256 hashes. They identify the reviewed adapter implementation and case
+definition, including expectations and intervention records. Names or prose
+alone do not identify the executable assertions. These fields describe the
+contract; the adapter and oracle runtime are not implemented yet.
+
+Verdict selection (implemented later in the independent oracle):
 
 - `VERIFIED`: all seven checks pass.
-- `NOT_REPRODUCED`: the environment is valid, but the vulnerable target signal
-  or required reachability evidence is absent.
+- `NOT_REPRODUCED`: the environment is valid and adequate observations establish
+  that the target signal or target reachability is absent.
 - `INCONCLUSIVE`: evidence is missing, conflicting, or controls fail in a way
   that prevents attribution.
 - `INVALID_ENVIRONMENT`: build, startup, harness, toolchain, or environment
@@ -351,14 +372,18 @@ Verdict selection:
 
 Every non-`VERIFIED` result requires a failure class. Never upgrade
 `INCONCLUSIVE` or `INVALID_ENVIRONMENT` for reporting convenience.
+All seven passed checks require `VERIFIED`; a non-success result cannot contain
+only passed checks. Other detailed verdict/check relationships and competing
+failure precedence require semantic validation, not just JSON Schema. See the
+[milestone decision table](first-infrastructure-milestone.md#decision-2-distinguish-failure-from-unavailable-evaluation).
 
 ## 10. Packaging and replay
 
 `case-manifest` is the root index for the current package state. It references
 records and artifacts; it does not duplicate them.
 
-`draft` and `buildable` manifests may be incomplete. A `replayable` or final
-verdict manifest must include:
+`draft` and `buildable` manifests may be incomplete. `replayable` and `verified`
+manifests must include:
 
 - vulnerability and source records;
 - paired environment;
@@ -367,6 +392,23 @@ verdict manifest must include:
 - vulnerable, patched, and negative-control executions;
 - verification result;
 - replay entry-point artifact, command, and working directory.
+
+The other final statuses require a verification-result ID and nonempty artifact
+inventory. Preserve all available records, but do not invent missing builds,
+executions, or replay artifacts. Partial nonempty role maps are allowed. Replay
+information is optional for these non-success packages.
+
+An optional manifest `failure` contains `stage`, `class`, `summary`, and a
+nonempty diagnostic `evidence` list. `stage` uses the pipeline vocabulary
+(`collect`, `normalize`, `resolve`, `build`, `extract`, `execute`, `verify`,
+`report`); for example, Docker preflight for building uses `build`. Register the
+diagnostics in `artifact_ids`. A `verified` manifest cannot carry a current
+failure. Historical failures remain separate immutable records and artifacts.
+
+Before case expectations are available, keep a draft with failure diagnostics.
+For a prepared case where Docker is unavailable, emit `INVALID_ENVIRONMENT`
+with the observed diagnostic: fail the environment check and mark downstream
+checks not evaluated. Do not create build records for commands that never ran.
 
 Manifest status must agree with the referenced verification verdict:
 
@@ -382,9 +424,14 @@ does not mean the vulnerability was verified.
 
 ## 11. Validation workflow
 
+The [package foundation](package-foundation.md) now implements offline schema,
+artifact-integrity, and cross-record checks for the `0.2.0` baseline. It does not
+replace the independent CVE oracle or perform automatic legacy migration.
+
 Before returning any record:
 
 1. Select the schema matching the record's `schema` and `schema_version`.
+   Reject unsupported versions rather than selecting a default.
 2. Validate through the complete offline schema registry so `$ref` resolution
    never uses the network.
 3. Correct structural validation errors without fabricating values.

@@ -10,7 +10,7 @@ from .fixtures import VALID, invalid_fixtures
 
 
 ROOT = Path(__file__).resolve().parents[2]
-SCHEMA_DIR = ROOT / "schemas" / "0.1.0"
+SUPPORTED_VERSIONS = {"0.1.0", "0.2.0"}
 PERSISTED = {
     "artifact-record", "source-record", "vulnerability-record",
     "environment-spec", "build-record", "execution-record",
@@ -27,10 +27,12 @@ def reject_duplicate_keys(pairs):
     return result
 
 
-def load_registry():
+def load_registry(version="0.1.0"):
+    if version not in SUPPORTED_VERSIONS:
+        raise ValueError(f"unsupported schema version: {version}")
     schemas = {}
     names = {}
-    for path in sorted(SCHEMA_DIR.glob("*.schema.json")):
+    for path in sorted((ROOT / "schemas" / version).glob("*.schema.json")):
         with path.open(encoding="utf-8") as stream:
             schema = json.load(stream, object_pairs_hook=reject_duplicate_keys)
         schemas[schema["$id"]] = schema
