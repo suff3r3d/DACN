@@ -1,9 +1,12 @@
 # Schema Consistency Review
 
+> **Archived review.** Findings below concern the comprehensive design, not a
+> certification of current runtime behavior. See [current documentation](../README.md).
+
 ## 1. Scope
 
-This review covers `docs/schema-plan.md` and
-`docs/schema-field-design.md`. It checks the complete Phase 1 schema family for:
+This review covers `docs/archive/schema-plan.md` and
+`docs/archive/schema-field-design.md`. It checks the complete Phase 1 schema family for:
 
 - schema inventory and canonical names;
 - record and entity identifiers;
@@ -18,7 +21,7 @@ This review covers `docs/schema-plan.md` and
 
 This review covers the comprehensive future-facing design. The active
 implementation is the reduced MVP under `schemas/0.2.0/`, with `0.1.0` retained
-for legacy validation (see `docs/schema-compatibility.md`); its structural and
+for legacy validation (see [schema compatibility](../schema-compatibility.md)); its structural and
 reference integrity is checked by the offline tests under `tests/schema/`.
 
 ## 2. Result
@@ -49,7 +52,7 @@ the following 20 possible schemas:
 
 The schema plan and field-design inventory agree. The MVP intentionally
 implements only the eight persisted records selected in
-`docs/schema-mvp-proposal.md`, now using `0.2.0` schema identities. The other
+[schema registry](../../schemas/README.md), now using `0.2.0` schema identities. The other
 records remain deferred design material.
 
 ## 3. Findings and Resolutions
@@ -262,11 +265,9 @@ not contain dangling references.
 - Experiment aggregates cannot count `INCONCLUSIVE` or
   `INVALID_ENVIRONMENT` as successful reproductions.
 
-## 7. Remaining Implementation Checks
+## 7. Validation Invariants
 
-No unresolved documentation conflict currently blocks implementation. The
-following checks must be enforced when JSON Schemas and semantic validators are
-implemented:
+The comprehensive design requires the following structural and semantic checks:
 
 1. Every `_id` field resolves to the expected record kind where it is a record
    reference.

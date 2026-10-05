@@ -10,11 +10,20 @@ urn:dacn:schema:<schema-name>:<schema-version>
 `common.schema.json` is the shared definition library. The eight persisted
 schemas cover sources, artifacts, normalized vulnerability and patch data, the
 paired environment, builds, executions, verification, and the replayable case
-manifest. The rationale and deferred capabilities are documented in
-`docs/schema-mvp-proposal.md`. The new version supports truthful partial failure
+manifest. The current version supports truthful partial failure
 packages, three-state verification checks, and required oracle/adapter identity.
 See [compatibility rules](../docs/schema-compatibility.md) and the
 [usage guide](../docs/schema-usage-guide.md).
+
+Revision resolution and patch context belong to `vulnerability-record`.
+`execution-record` combines the requested invocation and observations for one run.
+`verification-result` combines expectations, checks and the reported verdict.
+Environment declarations remain separate from observed builds. Raw evidence is
+stored externally and referenced by records with provenance and opaque IDs.
+
+The schema family does not define separate retry, pipeline-run, benchmark,
+experiment or presentation records. Validation reports can be stored as artifacts;
+immutable record storage alone does not provide lifecycle orchestration.
 
 The environment contract supports Docker only. Every environment specification
 must use `isolation.type: docker` and a digest-pinned image; host execution,

@@ -1,8 +1,11 @@
 # Foundation Schema Field Design
 
+> **Archived design.** These field tables describe deferred proposals, not the
+> current contract. See the [current documentation](../README.md).
+
 > **Status:** This is the comprehensive future-facing design retained for
 > reference. The active pre-runtime contract is the smaller MVP, now `0.2.0`,
-> in `schemas/0.2.0/`; see `docs/schema-compatibility.md`. Deferred schemas in this
+> in `schemas/0.2.0/`; see [schema compatibility](../schema-compatibility.md). Deferred schemas in this
 > document are not current implementation requirements.
 
 ## 1. Scope
@@ -16,7 +19,7 @@ It is a design specification, not an implementation. The tables below define
 the intended JSON shape, requiredness, structural constraints, and semantic
 rules that later JSON Schema files and validators must implement.
 
-The design follows the conventions in `docs/schema-plan.md`:
+The design follows the conventions in `docs/archive/schema-plan.md`:
 
 - JSON Schema Draft 2020-12;
 - immutable, versioned schema URNs;

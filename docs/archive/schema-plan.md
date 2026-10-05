@@ -1,9 +1,12 @@
 # Phase 1 Schema Plan
 
+> **Archived design.** See the [current documentation](../README.md) before
+> using any fields or requirements described here.
+
 > **Status:** This document records the comprehensive schema plan. The active
 > implementation is the eight-record MVP, now versioned `0.2.0`; `0.1.0` remains
-> available for legacy validation. See `docs/schema-compatibility.md` and
-> `docs/schema-mvp-proposal.md`. Additional records are introduced only when an
+> available for legacy validation. See [schema compatibility](../schema-compatibility.md) and
+> [schema registry](../../schemas/README.md). Additional records are introduced only when an
 > exercised pipeline requirement justifies them.
 
 ## 1. Purpose
@@ -556,9 +559,9 @@ Required concepts:
 - replay instructions;
 - artifact references.
 
-## 11. Recommended Implementation Priority
+## 11. Schema Dependency Groups
 
-### Priority 1: shared evidence contract
+### Shared evidence contract
 
 1. `common.schema.json`
 2. `artifact-record.schema.json`
@@ -568,7 +571,7 @@ Required concepts:
 These establish identifiers, provenance, hashes, and raw evidence handling used
 by every later schema.
 
-### Priority 2: normalized case identity
+### Normalized case identity
 
 5. `vulnerability-record.schema.json`
 6. `revision-resolution.schema.json`
@@ -577,7 +580,7 @@ by every later schema.
 These establish what vulnerability and source revisions the project is trying
 to reproduce.
 
-### Priority 3: reconstruction and execution
+### Reconstruction and execution
 
 8. `environment-spec.schema.json`
 9. `build-record.schema.json`
@@ -586,7 +589,7 @@ to reproduce.
 
 These define the deterministic substrate and observed runtime evidence.
 
-### Priority 4: verification and packaging
+### Verification and packaging
 
 12. `verification-policy.schema.json`
 13. `verification-result.schema.json`
@@ -594,7 +597,7 @@ These define the deterministic substrate and observed runtime evidence.
 
 These make the counterfactual claim explicit and package it for replay.
 
-### Priority 5: lifecycle and research evaluation
+### Lifecycle and research evaluation
 
 15. `attempt-record.schema.json`
 16. `pipeline-run.schema.json`

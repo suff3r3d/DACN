@@ -375,7 +375,7 @@ Every non-`VERIFIED` result requires a failure class. Never upgrade
 All seven passed checks require `VERIFIED`; a non-success result cannot contain
 only passed checks. Other detailed verdict/check relationships and competing
 failure precedence require semantic validation, not just JSON Schema. See the
-[milestone decision table](first-infrastructure-milestone.md#decision-2-distinguish-failure-from-unavailable-evaluation).
+[verification contract](verification-contract.md#check-states-and-verdict-precedence).
 
 ## 10. Packaging and replay
 

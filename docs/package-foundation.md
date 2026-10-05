@@ -86,7 +86,7 @@ Implemented checks include:
   limits may be stricter than environment limits, treated as ceilings here.
 - Build/run ordering, verification after consumed runs, manifest/verification
   execution selection, and final status/verdict agreement.
-- Observable check prerequisites; milestone `VERIFIED` records require completed,
+- Observable check prerequisites; `VERIFIED` records require completed,
   untruncated runs and benign controls on both selected builds.
 
 `valid: true` means these integrity and consistency checks passed. It does not

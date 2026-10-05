@@ -4,7 +4,7 @@
 
 Both families contain eight persisted record schemas and a common definition
 library. `0.1.0` is preserved byte-for-byte. `0.2.0` is the contract for new
-milestone producers. Artifact storage and the
+record producers. Artifact storage and the
 [semantic package validator](package-foundation.md) are implemented; builders,
 execution harness, a migration command, and the oracle remain planned.
 
@@ -47,7 +47,7 @@ edit is not migration. When a future migration tool is implemented, it must:
    cannot resolve it, stop migration for review and retain the legacy record.
 5. Supply actual oracle/adapter/case-definition identities. If these cannot be
    recovered, keep legacy validation available and require re-verification for
-   milestone acceptance. Never invent identity, hashes, skip reasons, or runs.
+   acceptance under the verification contract. Never invent identity, hashes, skip reasons, or runs.
 6. Validate the new records and package relationships. A converted boolean or
    structurally valid record is not evidence of successful reproduction.
 
